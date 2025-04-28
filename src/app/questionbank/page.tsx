@@ -43,6 +43,12 @@ export default function QuestionBank() {
     const [editMode, setEditMode] = useState<Record<string, boolean>>({});
     const [editedQuestions, setEditedQuestions] = useState<Record<string, Question>>({});
 
+    // Modal stuff
+    const [showModal, setShowModal] = useState(false);
+    const [courseName, setCourseName] = useState('');
+    const [courseCode, setCourseCode] = useState('');
+    const [courseType, setCourseType] = useState('ib'); // default option
+
     // Filter states
     const [filters, setFilters] = useState({
         courseCode: "",
@@ -264,6 +270,23 @@ export default function QuestionBank() {
         }
     };
 
+    const handleAddCourse = async () => {
+        const res = await fetch('/api/add-course', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ courseName, courseCode, courseType })
+        });
+        if (res.ok) {
+            setShowModal(false);
+            setCourseName('');
+            setCourseCode('');
+            setCourseType('Computer Science');
+            // Optionally reload course list
+        } else {
+            alert('Failed to add course');
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -276,12 +299,21 @@ export default function QuestionBank() {
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Question Bank</h1>
-                <Link
-                    href="/questionbank/add"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                >
-                    Add New Question
-                </Link>
+
+                <div className="">
+                    <button
+                        onClick={() => setShowModal(true)}
+                        className="mx-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    >
+                        Add Course
+                    </button>
+                    <Link
+                        href="/questionbank/add"
+                        className="mx-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    >
+                        Add New Question
+                    </Link>
+                </div>
             </div>
 
             {/* Course Selection */}
@@ -470,9 +502,56 @@ export default function QuestionBank() {
                     ))
                 )}
             </div>
+            {showModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-lg max-w-md w-full">
+                        <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Add New Course</h2>
+
+                        <select
+                            value={courseType}
+                            onChange={(e) => setCourseType(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded mb-2 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                        >
+                            <option value='ib'>IB</option>
+                            <option value='igcse'>IGCSE</option>
+                            <option value='alevel'>A-Level</option>
+                        </select>
+
+                        <input
+                            type="text"
+                            placeholder="Course Code"
+                            value={courseCode}
+                            onChange={(e) => setCourseCode(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded mb-2 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                        />
+
+                        <input
+                            type="text"
+                            placeholder="Course Name"
+                            value={courseName}
+                            onChange={(e) => setCourseName(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded mb-2 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                        />
+
+                        <div className="flex justify-end space-x-2">
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="px-4 py-2 border rounded dark:text-white"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleAddCourse}
+                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            >
+                                Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
-
 
     // Update the QuestionItem component to show courseName instead of courseCode
     function QuestionItem(
